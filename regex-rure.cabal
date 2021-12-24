@@ -2,12 +2,11 @@ cabal-version:   1.18
 name:               regex-rure
 version:            0.1.0.0
 synopsis: Bindings to Rust's regex library
--- description:
+description: Bindings to Rust's regex library, including higher-level functions for compatibility.
 
 -- A URL where users can report bugs.
 -- bug-reports:
 
--- The license under which the package is released.
 license: GPL-3
 license-file: LICENSE
 author:             Vanessa McHale
@@ -24,12 +23,7 @@ library
                      Regex.Rure.FFI
 
     extra-libraries: rure
-
-    -- Modules included in this library but not exported.
-    -- other-modules:
-
-    -- LANGUAGE extensions used by modules in this package.
-    -- other-extensions:
+    other-extensions: FlexibleContexts
     build-depends:    base >=4.3.0.0 && <5
                     , bytestring
     build-tool-depends: c2hs:c2hs >= 0.26.1
@@ -57,6 +51,7 @@ test-suite regex-rure-test
     hs-source-dirs:   test
     main-is:          Spec.hs
     ghc-options:      -Wall
+    other-extensions: OverloadedStrings
     build-depends:    base
                     , tasty
                     , tasty-hunit
