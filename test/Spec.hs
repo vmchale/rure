@@ -13,7 +13,17 @@ main = defaultMain $
     testGroup "High-level interface"
         [ testCase "Compiles a regex" (compileY ".*")
         , testCase "Matches a file extension" (matchY "\\.awk$" "/usr/share/vim/vim82/tools/mve.awk")
+        , testCase "Matches at" (findAt "libj\\.dylib$" "/Applications/j903/bin/libj.dylib" (RureMatch 23 33))
         ]
+
+findAt :: BS.ByteString
+       -> BS.ByteString
+       -> RureMatch
+       -> Assertion
+findAt re haystack expected = do
+    (Right rePtr) <- compile re
+    actual <- find rePtr haystack 0
+    actual @?= Just expected
 
 matchY :: BS.ByteString
        -> BS.ByteString

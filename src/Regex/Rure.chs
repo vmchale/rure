@@ -3,6 +3,8 @@
 module Regex.Rure ( compile
                   , isMatch
                   , find
+                  -- * Types
+                  , RureMatch (..)
                   ) where
 
 import Data.Coerce (coerce)
