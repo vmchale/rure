@@ -44,10 +44,3 @@ matchY re haystack =
     case hsIsMatch re haystack of
         Left err -> assertFailure err
         Right b  -> assertBool "matches" b
-
-compileY :: BS.ByteString -> Assertion
-compileY bs = do
-    res <- compile bs
-    case res of
-        Left err -> assertFailure err
-        Right{}  -> assertBool "success." True
