@@ -20,8 +20,8 @@ category: Text, Regex
 extra-source-files: CHANGELOG.md
 
 library
-    exposed-modules:  Regex.Rure.FFI
-                    , Regex.Rure
+    exposed-modules: Regex.Rure
+                     Regex.Rure.FFI
 
     extra-libraries: rure
 
