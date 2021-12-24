@@ -32,10 +32,9 @@ findAt :: BS.ByteString
        -> BS.ByteString
        -> RureMatch
        -> Assertion
-findAt re haystack expected = do
-    (Right rePtr) <- compile re
-    actual <- find rePtr haystack 0
-    actual @?= Just expected
+findAt re haystack expected =
+    let (Right actual) = hsFind re haystack
+        in actual @?= Just expected
 
 matchY :: BS.ByteString
        -> BS.ByteString

@@ -3,12 +3,13 @@
 module Regex.Rure ( -- * Higher-level functions
                     hsMatches
                   , hsIsMatch
+                  , hsFind
                   -- * Stateful, functions in 'IO'
                   , compile
                   , isMatch
                   , find
-                  , mkIter
                   , matches
+                  , mkIter
                   -- * Types
                   , RureMatch (..)
                   ) where
@@ -82,6 +83,14 @@ rureMatchFromPtr matchPtr =
     where mkRureMatch :: Coercible a CSize => a -> a -> RureMatch
           mkRureMatch start' end = RureMatch (coerce start') (coerce end)
 
+hsFind :: BS.ByteString -- ^ Regex
+       -> BS.ByteString -- ^ Haystack
+       -> Either String (Maybe (RureMatch))
+hsFind re haystack = unsafePerformIO $ do
+    rePtr <- compile re
+    case rePtr of
+        Left err -> pure (Left err)
+        Right rp -> Right <$> find rp haystack 0
 
 find :: RurePtr
      -> BS.ByteString -- ^ Unicode
