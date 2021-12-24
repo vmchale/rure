@@ -4,7 +4,6 @@ module Main (main) where
 
 import qualified Data.ByteString  as BS
 import           Regex.Rure
-import           System.IO.Unsafe (unsafePerformIO)
 import           Test.Tasty
 import           Test.Tasty.HUnit
 
@@ -13,8 +12,23 @@ main = defaultMain $
     testGroup "High-level interface"
         [ testCase "Compiles a regex" (compileY ".*")
         , testCase "Matches a file extension" (matchY "\\.awk$" "/usr/share/vim/vim82/tools/mve.awk")
+        , testCase "Matches a date" (matchY "^\\d{4}-\\d{2}-\\d{2}$" "2014-01-01")
         , testCase "Matches at" (findAt "libj\\.dylib$" "/Applications/j903/bin/libj.dylib" (RureMatch 23 33))
+        , testCase "Matches at (plural)" $
+            matchesAt "\\d{4}-\\d{2}-\\d{2}" "2012-03-14 2013-01-01 2014-07-05"
+                [ RureMatch 0 10
+                , RureMatch 11 21
+                , RureMatch 22 32
+                ]
         ]
+
+matchesAt :: BS.ByteString
+          -> BS.ByteString
+          -> [RureMatch]
+          -> Assertion
+matchesAt re haystack expected =
+    let (Right actual) = hsMatches re haystack
+        in actual @?= expected
 
 findAt :: BS.ByteString
        -> BS.ByteString
@@ -29,14 +43,9 @@ matchY :: BS.ByteString
        -> BS.ByteString
        -> Assertion
 matchY re haystack =
-    assertBool "matches" (matches re haystack)
-
-matches :: BS.ByteString -- ^ Regex
-        -> BS.ByteString -- ^ Haystack
-        -> Bool
-matches re haystack = unsafePerformIO $ do
-    (Right rePtr) <- compile re
-    isMatch rePtr haystack 0
+    case hsIsMatch re haystack of
+        Left err -> assertFailure err
+        Right b  -> assertBool "matches" b
 
 compileY :: BS.ByteString -> Assertion
 compileY bs = do

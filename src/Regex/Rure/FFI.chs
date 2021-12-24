@@ -8,16 +8,20 @@ module Regex.Rure.FFI ( -- * Abstract types
                       , RurePtr
                       , RureErrorPtr
                       , RureOptionsPtr
+                      , RureIterPtr
                       , rureCompile
                       , rureOptionsNew
                       , rureErrorNew
                       , rureErrorMessage
+                      , rureIterNew
                       , rureFree
                       , rureOptionsFree
                       , rureErrorFree
+                      , rureIterFree
                       -- ** Matching
                       , rureIsMatch
                       , rureFind
+                      , rureIterNext
                       -- ** Flags
                       , rureFlagCaseI
                       , rureFlagMulti
@@ -57,6 +61,8 @@ data RureMatch = RureMatch !CSize !CSize deriving (Eq, Show)
 
 data RureError
 
+data RureIter
+
 (<<) :: Bits a => a -> Int -> a
 m << n = m `shift` n
 
@@ -84,11 +90,32 @@ rureDefaultFlags = RureFlags ({# const RURE_FLAG_UNICODE #})
 {# pointer *rure as RurePtr foreign finalizer rure_free as ^ -> Rure #}
 {# pointer *rure_options as RureOptionsPtr foreign finalizer rure_options_free as ^ -> RureOptions #}
 {# pointer *rure_error as RureErrorPtr foreign finalizer rure_error_free as ^ -> RureError #}
+{# pointer *rure_iter as RureIterPtr foreign finalizer rure_iter_free as ^ -> RureIter #}
 
 -- {# fun rure_compile_must as ^ { `CString' } -> `Ptr Rure' id #}
-{# fun rure_compile as ^ { `Ptr UInt8', coerce `CSize', coerce `RureFlags', `RureOptionsPtr', `RureErrorPtr' } -> `Ptr Rure' id #}
+{# fun rure_compile as ^ { `Ptr UInt8' 
+                         , coerce `CSize'
+                         , coerce `RureFlags'
+                         , `RureOptionsPtr'
+                         , `RureErrorPtr' 
+                         } -> `Ptr Rure' id 
+  #}
 {# fun rure_is_match as ^ { `RurePtr', `Ptr UInt8', coerce `CSize', coerce `CSize' } -> `Bool' #}
-{# fun rure_find as ^ { `RurePtr', `Ptr UInt8', coerce `CSize', coerce `CSize', castPtr `Ptr RureMatch' } -> `Bool' #}
+{# fun rure_find as ^ { `RurePtr'
+                      , `Ptr UInt8'
+                      , coerce `CSize'
+                      , coerce `CSize'
+                      , castPtr `Ptr RureMatch' 
+                      } -> `Bool' 
+  #}
+{# fun rure_iter_new as ^ { `RurePtr' } -> `Ptr RureIter' id #}
+{# fun rure_iter_next as ^ { `RureIterPtr'
+                           , `Ptr UInt8'
+                           , coerce `CSize'
+                           , castPtr `Ptr RureMatch'
+                           } -> `Bool'
+  #}
+-- TODO: rure_shortest_match faster?
 {# fun rure_options_new as ^ { } -> `Ptr RureOptions' id #}
 {# fun rure_options_size_limit as ^ { `RureOptionsPtr', coerce `CSize' } -> `()' #}
 {# fun rure_options_dfa_size_limit as ^ { `RureOptionsPtr', coerce `CSize' } -> `()' #}
