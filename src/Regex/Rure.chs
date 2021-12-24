@@ -15,6 +15,7 @@ module Regex.Rure ( -- * Stateful, functions in 'IO'
 
 import Data.Coerce (Coercible, coerce)
 import qualified Data.ByteString as BS
+import qualified Data.ByteString.Unsafe as BS
 import Foreign.C.Types (CSize)
 import Foreign.ForeignPtr (castForeignPtr, newForeignPtr)
 import Foreign.Ptr (castPtr, nullPtr, Ptr)
@@ -38,7 +39,7 @@ compile bs = do
     err <- castForeignPtr <$> newForeignPtr rureErrorFree (castPtr preErr)
     preOpt <- rureOptionsNew
     opt <- castForeignPtr <$> newForeignPtr rureOptionsFree (castPtr preOpt)
-    BS.useAsCStringLen bs $ \(p, sz) -> do
+    BS.unsafeUseAsCStringLen bs $ \(p, sz) -> do
         res <- rureCompile (castPtr p) (fromIntegral sz) rureDefaultFlags opt err
         if res == nullPtr
             then Left <$> rureErrorMessage err
@@ -67,7 +68,7 @@ iterNext :: RureIterPtr
          -> IO (Maybe RureMatch)
 iterNext reIPtr haystack =
     allocaBytes {# sizeof rure_match #} $ \matchPtr -> do
-        res <- BS.useAsCStringLen haystack $ \(p, sz) ->
+        res <- BS.unsafeUseAsCStringLen haystack $ \(p, sz) ->
             rureIterNext reIPtr (castPtr p) (fromIntegral sz) matchPtr
         if res
             then Just <$> rureMatchFromPtr matchPtr
@@ -88,7 +89,7 @@ find :: RurePtr
      -> IO (Maybe RureMatch)
 find rePtr haystack start =
     allocaBytes {# sizeof rure_match #} $ \matchPtr -> do
-        res <- BS.useAsCStringLen haystack $ \(p, sz) ->
+        res <- BS.unsafeUseAsCStringLen haystack $ \(p, sz) ->
             rureFind rePtr (castPtr p) (fromIntegral sz) start matchPtr
         if res
             then Just <$> rureMatchFromPtr matchPtr
@@ -108,5 +109,5 @@ isMatch :: RurePtr
         -> CSize -- ^ Start
         -> IO Bool
 isMatch rePtr haystack start =
-    BS.useAsCStringLen haystack $ \(p, sz) ->
+    BS.unsafeUseAsCStringLen haystack $ \(p, sz) ->
         rureIsMatch rePtr (castPtr p) (fromIntegral sz) start
