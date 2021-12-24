@@ -2,7 +2,7 @@ cabal-version:   1.18
 name:               regex-rure
 version:            0.1.0.0
 synopsis: Bindings to Rust's regex library
-description: Bindings to Rust's regex library, including higher-level functions for compatibility.
+description: Bindings to Rust's regex library, including a higher-level API.
 
 -- A URL where users can report bugs.
 -- bug-reports:
@@ -12,9 +12,6 @@ license-file: LICENSE
 author:             Vanessa McHale
 maintainer:         vamchale@gmail.com
 build-type: Simple
-
--- A copyright notice.
--- copyright:
 category: Text, Regex
 extra-source-files: CHANGELOG.md
 
