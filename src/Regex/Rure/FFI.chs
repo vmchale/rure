@@ -3,6 +3,7 @@ module Regex.Rure.FFI ( -- * Abstract types
                       , RureOptions
                       ) where
 
+import Data.Bits (Bits, (.|.), shift)
 import Foreign.C.String (CString)
 import Foreign.C.Types (CSize)
 import Foreign.Ptr (Ptr)
@@ -12,20 +13,54 @@ import Foreign.Ptr (Ptr)
 #define __arm__
 #include <rure.h>
 
+type UInt8 = {# type uint8_t #}
+{#typedef uint8_t UInt8#}
+{#default in `Ptr UInt8' [uint8_t *] id#} -- TODO: bytestring?
+
+type UInt32 = {# type uint32_t #}
+
+newtype RureFlags = RureFlags UInt32
+
+instance Semigroup RureFlags where
+    (<>) (RureFlags x) (RureFlags y) = RureFlags (x .|. y)
+
 data Rure
 
 data RureOptions
 
 data RureMatch = RureMatch !CSize !CSize
 
-data RureCaptures
-
-data RureIter
-
-data RureIterCaptureNames
-
 data RureError
 
-{# pointer *rure as RurePtr foreign finalizer rure_free as ^ -> Rure #}
+(<<) :: Bits a => a -> Int -> a
+m << n = m `shift` n
 
-{# fun pure rure_compile_must as ^ { `CString' } -> `Ptr Rure' id #}
+rureFlagCaseI :: RureFlags
+rureFlagCaseI = RureFlags ({# const RURE_FLAG_CASEI #})
+
+rureFlagMulti :: RureFlags
+rureFlagMulti = RureFlags ({# const RURE_FLAG_MULTI #})
+
+rureFlagDotNL :: RureFlags
+rureFlagDotNL = RureFlags ({# const RURE_FLAG_DOTNL #})
+
+rureFlagSwapGreed :: RureFlags
+rureFlagSwapGreed = RureFlags ({# const RURE_FLAG_SWAP_GREED #})
+
+rureFlagSpace :: RureFlags
+rureFlagSpace = RureFlags ({# const RURE_FLAG_SPACE #})
+
+rureFlagUnicode :: RureFlags
+rureFlagUnicode = RureFlags ({# const RURE_FLAG_UNICODE #})
+
+rureDefaultFlags :: RureFlags
+rureDefaultFlags = RureFlags ({# const RURE_FLAG_UNICODE #})
+
+{# pointer *rure as RurePtr foreign finalizer rure_free as ^ -> Rure #}
+{# pointer *rure_options as RureOptionsPtr foreign finalizer rure_options_free as ^ -> RureOptions #}
+{# pointer *rure_error as RureErrorPtr foreign finalizer rure_error_free as ^ -> RureError #}
+
+{# fun rure_compile_must as ^ { `CString' } -> `Ptr Rure' id #}
+{# fun rure_options_new as ^ { } -> `Ptr RureOptions' id #}
+{# fun rure_error_new as ^ { } -> `Ptr RureError' id #}
+{# fun rure_error_message as ^ { `RureErrorPtr' } -> `CString' #}
