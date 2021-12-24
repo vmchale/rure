@@ -1,12 +1,32 @@
+-- | See @rure.h@ for documentation + how to use.
 module Regex.Rure.FFI ( -- * Abstract types
                         Rure
                       , RureOptions
+                      , RureError
+                      -- * Types
+                      , RurePtr
+                      , RureErrorPtr
+                      , RureOptionsPtr
+                      , rureCompile
+                      , rureOptionsNew
+                      , rureErrorNew
+                      , rureErrorMessage
+                      , rureFree
+                      , rureOptionsFree
+                      , rureErrorFree
+                      , rureFlagCaseI
+                      , rureFlagMulti
+                      , rureFlagDotNL
+                      , rureFlagSpace
+                      , rureFlagUnicode
+                      , rureDefaultFlags
                       ) where
 
 import Data.Bits (Bits, (.|.), shift)
+import Data.Coerce (coerce)
 import Foreign.C.String (CString)
 import Foreign.C.Types (CSize)
-import Foreign.Ptr (Ptr)
+import Foreign.Ptr (Ptr, castPtr)
 
 -- TODO: not this
 #undef __arm64__
@@ -61,6 +81,11 @@ rureDefaultFlags = RureFlags ({# const RURE_FLAG_UNICODE #})
 {# pointer *rure_error as RureErrorPtr foreign finalizer rure_error_free as ^ -> RureError #}
 
 {# fun rure_compile_must as ^ { `CString' } -> `Ptr Rure' id #}
+{# fun rure_compile as ^ { `Ptr UInt8', coerce `CSize', coerce `RureFlags', `RureOptionsPtr', `RureErrorPtr' } -> `Ptr Rure' id #}
+{# fun rure_is_match as ^ { `RurePtr', `Ptr UInt8', coerce `CSize', coerce `CSize' } -> `Bool' #}
+{# fun rure_find as ^ { `RurePtr', `Ptr UInt8', coerce `CSize', coerce `CSize', castPtr `Ptr RureMatch' } -> `Bool' #}
 {# fun rure_options_new as ^ { } -> `Ptr RureOptions' id #}
+{# fun rure_options_size_limit as ^ { `RureOptionsPtr', coerce `CSize' } -> `()' #}
+{# fun rure_options_dfa_size_limit as ^ { `RureOptionsPtr', coerce `CSize' } -> `()' #}
 {# fun rure_error_new as ^ { } -> `Ptr RureError' id #}
-{# fun rure_error_message as ^ { `RureErrorPtr' } -> `CString' #}
+{# fun rure_error_message as ^ { `RureErrorPtr' } -> `String' #}
