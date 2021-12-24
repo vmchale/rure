@@ -14,6 +14,9 @@ module Regex.Rure.FFI ( -- * Abstract types
                       , rureFree
                       , rureOptionsFree
                       , rureErrorFree
+                      -- ** Matching
+                      , rureIsMatch
+                      -- ** Flags
                       , rureFlagCaseI
                       , rureFlagMulti
                       , rureFlagDotNL
@@ -80,7 +83,7 @@ rureDefaultFlags = RureFlags ({# const RURE_FLAG_UNICODE #})
 {# pointer *rure_options as RureOptionsPtr foreign finalizer rure_options_free as ^ -> RureOptions #}
 {# pointer *rure_error as RureErrorPtr foreign finalizer rure_error_free as ^ -> RureError #}
 
-{# fun rure_compile_must as ^ { `CString' } -> `Ptr Rure' id #}
+-- {# fun rure_compile_must as ^ { `CString' } -> `Ptr Rure' id #}
 {# fun rure_compile as ^ { `Ptr UInt8', coerce `CSize', coerce `RureFlags', `RureOptionsPtr', `RureErrorPtr' } -> `Ptr Rure' id #}
 {# fun rure_is_match as ^ { `RurePtr', `Ptr UInt8', coerce `CSize', coerce `CSize' } -> `Bool' #}
 {# fun rure_find as ^ { `RurePtr', `Ptr UInt8', coerce `CSize', coerce `CSize', castPtr `Ptr RureMatch' } -> `Bool' #}
