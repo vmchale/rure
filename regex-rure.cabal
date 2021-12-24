@@ -1,0 +1,40 @@
+cabal-version:   1.18
+name:               regex-rure
+version:            0.1.0.0
+synopsis: Bindings to Rust's regex library
+-- description:
+
+-- A URL where users can report bugs.
+-- bug-reports:
+
+-- The license under which the package is released.
+license: GPL-3
+license-file: LICENSE
+author:             Vanessa McHale
+maintainer:         vamchale@gmail.com
+build-type: Simple
+
+-- A copyright notice.
+-- copyright:
+category: Text, Regex
+extra-source-files: CHANGELOG.md
+
+library
+    exposed-modules:  Regex.Rure.FFI
+
+    -- Modules included in this library but not exported.
+    -- other-modules:
+
+    -- LANGUAGE extensions used by modules in this package.
+    -- other-extensions:
+    build-depends:    base >=4.3.0.0 && <5
+    build-tool-depends: c2hs:c2hs
+    hs-source-dirs:   src
+    default-language: Haskell2010
+
+test-suite regex-rure-test
+    default-language: Haskell2010
+    type:             exitcode-stdio-1.0
+    hs-source-dirs:   test
+    main-is:          Spec.hs
+    build-depends:    base 
