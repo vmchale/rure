@@ -12,6 +12,7 @@ module Regex.Rure.FFI ( -- * Types
                       , UInt32
                       -- ** Types
                       , RureMatch (..)
+                      , RureFlags
                       -- ** Pointer types (c2hs)
                       , RurePtr
                       , RureErrorPtr
@@ -84,8 +85,6 @@ type UInt8 = {# type uint8_t #}
 type UInt32 = {# type uint32_t #}
 
 newtype RureFlags = RureFlags UInt32
-
--- type Int32 = {# type int32_t #}
 
 instance Semigroup RureFlags where
     (<>) (RureFlags x) (RureFlags y) = RureFlags (x .|. y)

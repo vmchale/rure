@@ -1,5 +1,3 @@
-{-# LANGUAGE FlexibleContexts #-}
-
 module Regex.Rure ( -- * Higher-level functions
                     hsMatches
                   , hsIsMatch
@@ -12,9 +10,18 @@ module Regex.Rure ( -- * Higher-level functions
                   , mkIter
                   -- * Types
                   , RureMatch (..)
+                  -- * Options/flags
+                  , RureFlags
+                  , rureFlagCaseI
+                  , rureFlagMulti
+                  , rureFlagDotNL
+                  , rureFlagSwapGreed
+                  , rureFlagSpace
+                  , rureFlagUnicode
+                  , rureDefaultFlags
                   ) where
 
-import Data.Coerce (Coercible, coerce)
+import Data.Coerce (coerce)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Unsafe as BS
 import Foreign.C.Types (CSize)
@@ -32,6 +39,8 @@ import System.IO.Unsafe (unsafePerformIO)
 mkIter :: RurePtr -> IO RureIterPtr
 mkIter rePtr =
     castForeignPtr <$> (newForeignPtr rureIterFree . castPtr =<< rureIterNew rePtr)
+
+-- TODO: version taking in flags
 
 -- | Compile with default flags
 compile :: BS.ByteString -> IO (Either String RurePtr)
@@ -77,11 +86,9 @@ iterNext reIPtr haystack =
 
 rureMatchFromPtr :: Ptr RureMatch -> IO RureMatch
 rureMatchFromPtr matchPtr =
-    mkRureMatch
-        <$> {# get rure_match->start #} matchPtr
-        <*> {# get rure_match->end #} matchPtr
-    where mkRureMatch :: Coercible a CSize => a -> a -> RureMatch
-          mkRureMatch start' end = RureMatch (coerce start') (coerce end)
+    RureMatch
+        <$> fmap coerce ({# get rure_match->start #} matchPtr)
+        <*> fmap coerce ({# get rure_match->end #} matchPtr)
 
 hsFind :: BS.ByteString -- ^ Regex
        -> BS.ByteString -- ^ Haystack
