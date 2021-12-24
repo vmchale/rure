@@ -3,6 +3,7 @@ module Regex.Rure.FFI ( -- * Abstract types
                         Rure
                       , RureOptions
                       , RureError
+                      , RureMatch (..)
                       -- * Types
                       , RurePtr
                       , RureErrorPtr
@@ -16,6 +17,7 @@ module Regex.Rure.FFI ( -- * Abstract types
                       , rureErrorFree
                       -- ** Matching
                       , rureIsMatch
+                      , rureFind
                       -- ** Flags
                       , rureFlagCaseI
                       , rureFlagMulti
