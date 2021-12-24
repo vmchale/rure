@@ -1,14 +1,14 @@
 {-# LANGUAGE FlexibleContexts #-}
 
-module Regex.Rure ( -- * Stateful, functions in 'IO'
-                    compile
+module Regex.Rure ( -- * Higher-level functions
+                    hsMatches
+                  , hsIsMatch
+                  -- * Stateful, functions in 'IO'
+                  , compile
                   , isMatch
                   , find
                   , mkIter
                   , matches
-                  -- * Higher-level functions
-                  , hsMatches
-                  , hsIsMatch
                   -- * Types
                   , RureMatch (..)
                   ) where
