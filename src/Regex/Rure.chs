@@ -40,23 +40,24 @@ mkIter rePtr =
 -- TODO: version taking in flags
 
 -- | Compile with default flags
-compile :: BS.ByteString -> IO (Either String RurePtr)
-compile bs = do
+compile :: RureFlags -> BS.ByteString -> IO (Either String RurePtr)
+compile flags bs = do
     preErr <- rureErrorNew
     err <- castForeignPtr <$> newForeignPtr rureErrorFree (castPtr preErr)
     preOpt <- rureOptionsNew
     opt <- castForeignPtr <$> newForeignPtr rureOptionsFree (castPtr preOpt)
     BS.unsafeUseAsCStringLen bs $ \(p, sz) -> do
-        res <- rureCompile (castPtr p) (fromIntegral sz) rureDefaultFlags opt err
+        res <- rureCompile (castPtr p) (fromIntegral sz) flags opt err
         if res == nullPtr
             then Left <$> rureErrorMessage err
             else Right . castForeignPtr <$> newForeignPtr rureFree (castPtr res)
 
-hsMatches :: BS.ByteString -- ^ Regex
+hsMatches :: RureFlags
+          -> BS.ByteString -- ^ Regex
           -> BS.ByteString -- ^ Haystack (unicode)
           -> Either String [RureMatch]
-hsMatches re haystack = unsafePerformIO $ do
-    rePtr <- compile re
+hsMatches flags re haystack = unsafePerformIO $ do
+    rePtr <- compile flags re
     case rePtr of
         Left err -> pure (Left err)
         Right rp -> Right <$> ((\riPtr -> matches riPtr haystack) =<< mkIter rp)
@@ -87,11 +88,12 @@ rureMatchFromPtr matchPtr =
         <$> fmap coerce ({# get rure_match->start #} matchPtr)
         <*> fmap coerce ({# get rure_match->end #} matchPtr)
 
-hsFind :: BS.ByteString -- ^ Regex
+hsFind :: RureFlags
+       -> BS.ByteString -- ^ Regex
        -> BS.ByteString -- ^ Haystack
        -> Either String (Maybe (RureMatch))
-hsFind re haystack = unsafePerformIO $ do
-    rePtr <- compile re
+hsFind flags re haystack = unsafePerformIO $ do
+    rePtr <- compile flags re
     case rePtr of
         Left err -> pure (Left err)
         Right rp -> Right <$> find rp haystack 0
@@ -108,11 +110,12 @@ find rePtr haystack start =
             then Just <$> rureMatchFromPtr matchPtr
             else pure Nothing
 
-hsIsMatch :: BS.ByteString -- ^ Regex
+hsIsMatch :: RureFlags
+          -> BS.ByteString -- ^ Regex
           -> BS.ByteString -- ^ Haystack (unicode)
           -> Either String Bool
-hsIsMatch re haystack = unsafePerformIO $ do
-    rePtr <- compile re
+hsIsMatch flags re haystack = unsafePerformIO $ do
+    rePtr <- compile flags re
     case rePtr of
         Left err -> pure (Left err)
         Right rp -> Right <$> isMatch rp haystack 0
