@@ -25,7 +25,7 @@ matchesAt :: BS.ByteString
           -> [RureMatch]
           -> Assertion
 matchesAt re haystack expected =
-    let (Right actual) = hsMatches re haystack
+    let (Right actual) = hsMatches rureDefaultFlags re haystack
         in actual @?= expected
 
 findAt :: BS.ByteString
@@ -33,13 +33,13 @@ findAt :: BS.ByteString
        -> RureMatch
        -> Assertion
 findAt re haystack expected =
-    let (Right actual) = hsFind re haystack
+    let (Right actual) = hsFind rureDefaultFlags re haystack
         in actual @?= Just expected
 
 matchY :: BS.ByteString
        -> BS.ByteString
        -> Assertion
 matchY re haystack =
-    case hsIsMatch re haystack of
+    case hsIsMatch rureDefaultFlags re haystack of
         Left err -> assertFailure err
         Right b  -> assertBool "matches" b
