@@ -74,8 +74,6 @@ import Foreign.C.Types (CSize)
 import Foreign.Ptr (Ptr, castPtr)
 
 -- TODO: not this
-#undef __arm64__
-#define __arm__
 #include <rure.h>
 
 type UInt8 = {# type uint8_t #}
