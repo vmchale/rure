@@ -55,6 +55,7 @@ compile flags bs = do
             then Left <$> rureErrorMessage err
             else Right . castForeignPtr <$> newForeignPtr rureFree (castPtr res)
 
+{-# NOINLINE hsMatches #-}
 hsMatches :: RureFlags
           -> BS.ByteString -- ^ Regex
           -> BS.ByteString -- ^ Haystack (unicode)
@@ -91,6 +92,7 @@ rureMatchFromPtr matchPtr =
         <$> fmap coerce ({# get rure_match->start #} matchPtr)
         <*> fmap coerce ({# get rure_match->end #} matchPtr)
 
+{-# NOINLINE hsFind #-}
 hsFind :: RureFlags
        -> BS.ByteString -- ^ Regex
        -> BS.ByteString -- ^ Haystack
@@ -113,6 +115,7 @@ find rePtr haystack start =
             then Just <$> rureMatchFromPtr matchPtr
             else pure Nothing
 
+{-# NOINLINE hsIsMatch #-}
 hsIsMatch :: RureFlags
           -> BS.ByteString -- ^ Regex
           -> BS.ByteString -- ^ Haystack (unicode)
