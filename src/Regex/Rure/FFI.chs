@@ -93,7 +93,7 @@ data Rure
 
 data RureOptions
 
-data RureMatch = RureMatch !CSize !CSize deriving (Eq, Show)
+data RureMatch = RureMatch { start :: !CSize, end :: !CSize } deriving (Eq, Show)
 
 data RureError
 

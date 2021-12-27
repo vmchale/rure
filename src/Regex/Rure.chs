@@ -107,10 +107,10 @@ find :: RurePtr
      -> BS.ByteString -- ^ Unicode
      -> CSize -- ^ Start
      -> IO (Maybe RureMatch)
-find rePtr haystack start =
+find rePtr haystack start' =
     allocaBytes {# sizeof rure_match #} $ \matchPtr -> do
         res <- BS.unsafeUseAsCStringLen haystack $ \(p, sz) ->
-            rureFind rePtr (castPtr p) (fromIntegral sz) start matchPtr
+            rureFind rePtr (castPtr p) (fromIntegral sz) start' matchPtr
         if res
             then Just <$> rureMatchFromPtr matchPtr
             else pure Nothing
@@ -130,6 +130,6 @@ isMatch :: RurePtr
         -> BS.ByteString -- ^ Unicode
         -> CSize -- ^ Start
         -> IO Bool
-isMatch rePtr haystack start =
+isMatch rePtr haystack start' =
     BS.unsafeUseAsCStringLen haystack $ \(p, sz) ->
-        rureIsMatch rePtr (castPtr p) (fromIntegral sz) start
+        rureIsMatch rePtr (castPtr p) (fromIntegral sz) start'
