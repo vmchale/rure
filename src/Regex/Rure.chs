@@ -61,7 +61,7 @@ compileSet flags bss = do
             traverse_ touchForeignPtr ps
             if res == nullPtr
                 then Left <$> rureErrorMessage err
-                else Right . castForeignPtr <$> newForeignPtr rureFree (castPtr res)
+                else Right . castForeignPtr <$> newForeignPtr rureSetFree (castPtr res)
     where l = length bss
           rip (BS.BS psϵ lϵ) = (psϵ, lϵ)
           (ps, ss) = unzip (fmap rip bss)
