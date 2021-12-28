@@ -47,6 +47,7 @@ mkIter :: RurePtr -> IO RureIterPtr
 mkIter rePtr =
     castForeignPtr <$> (newForeignPtr rureIterFree . castPtr =<< rureIterNew rePtr)
 
+-- | Segfaults if given >3 patterns
 compileSet :: RureFlags -> [BS.ByteString] -> IO (Either String RureSetPtr)
 compileSet flags bss = do
     preErr <- rureErrorNew
@@ -66,7 +67,6 @@ compileSet flags bss = do
           rip (BS.BS psϵ lϵ) = (psϵ, lϵ)
           (ps, ss) = unzip (fmap rip bss)
 
--- | Compile with default flags
 compile :: RureFlags -> BS.ByteString -> IO (Either String RurePtr)
 compile flags bs = do
     preErr <- rureErrorNew
@@ -139,6 +139,7 @@ find rePtr haystack start' =
             then Just <$> rureMatchFromPtr matchPtr
             else pure Nothing
 
+{-# NOINLINE hsSetIsMatch #-}
 hsSetIsMatch :: RureFlags
              -> [BS.ByteString] -- ^ Needles (regex)
              -> BS.ByteString -- ^ Haystack

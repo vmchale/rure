@@ -1,0 +1,1 @@
+- [ ] `compileSet` segfaults if given >3 pointers?
