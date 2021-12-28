@@ -1,10 +1,13 @@
 module Regex.Rure ( -- * Higher-level functions
                     hsMatches
                   , hsIsMatch
+                  , hsSetIsMatch
                   , hsFind
                   -- * Stateful, functions in 'IO'
                   , compile
+                  , compileSet
                   , isMatch
+                  , setIsMatch
                   , find
                   , matches
                   , mkIter
@@ -23,11 +26,15 @@ module Regex.Rure ( -- * Higher-level functions
 
 import Data.Coerce (coerce)
 import qualified Data.ByteString as BS
+import qualified Data.ByteString.Internal as BS
 import qualified Data.ByteString.Unsafe as BS
+import Data.Foldable (traverse_)
 import Foreign.C.Types (CSize)
-import Foreign.ForeignPtr (castForeignPtr, newForeignPtr)
+import Foreign.ForeignPtr (castForeignPtr, newForeignPtr, touchForeignPtr)
+import Foreign.ForeignPtr.Unsafe (unsafeForeignPtrToPtr)
 import Foreign.Ptr (castPtr, nullPtr, Ptr)
-import Foreign.Marshal.Alloc (allocaBytes)
+import Foreign.Marshal.Alloc (allocaBytes, alloca)
+import Foreign.Marshal.Array (pokeArray)
 import Regex.Rure.FFI
 import System.IO.Unsafe (unsafePerformIO)
 
@@ -40,7 +47,24 @@ mkIter :: RurePtr -> IO RureIterPtr
 mkIter rePtr =
     castForeignPtr <$> (newForeignPtr rureIterFree . castPtr =<< rureIterNew rePtr)
 
--- TODO: version taking in flags
+compileSet :: RureFlags -> [BS.ByteString] -> IO (Either String RureSetPtr)
+compileSet flags bss = do
+    preErr <- rureErrorNew
+    err <- castForeignPtr <$> newForeignPtr rureErrorFree (castPtr preErr)
+    preOpt <- rureOptionsNew
+    opt <- castForeignPtr <$> newForeignPtr rureOptionsFree (castPtr preOpt)
+    alloca $ \bPtrs ->
+        alloca $ \szs -> do
+            pokeArray bPtrs (fmap unsafeForeignPtrToPtr ps)
+            pokeArray szs (fromIntegral <$> ss)
+            res <- rureCompileSet (castPtr bPtrs) szs (fromIntegral l) flags opt err
+            traverse_ touchForeignPtr ps
+            if res == nullPtr
+                then Left <$> rureErrorMessage err
+                else Right . castForeignPtr <$> newForeignPtr rureFree (castPtr res)
+    where l = length bss
+          rip (BS.BS psϵ lϵ) = (psϵ, lϵ)
+          (ps, ss) = unzip (fmap rip bss)
 
 -- | Compile with default flags
 compile :: RureFlags -> BS.ByteString -> IO (Either String RurePtr)
@@ -115,6 +139,16 @@ find rePtr haystack start' =
             then Just <$> rureMatchFromPtr matchPtr
             else pure Nothing
 
+hsSetIsMatch :: RureFlags
+             -> [BS.ByteString] -- ^ Needles (regex)
+             -> BS.ByteString -- ^ Haystack
+             -> Either String Bool
+hsSetIsMatch flags res haystack = unsafePerformIO $ do
+    resPtr <- compileSet flags res
+    case resPtr of
+        Left err -> pure (Left err)
+        Right rsp -> Right <$> setIsMatch rsp haystack 0
+
 {-# NOINLINE hsIsMatch #-}
 hsIsMatch :: RureFlags
           -> BS.ByteString -- ^ Regex
@@ -125,6 +159,14 @@ hsIsMatch flags re haystack = unsafePerformIO $ do
     case rePtr of
         Left err -> pure (Left err)
         Right rp -> Right <$> isMatch rp haystack 0
+
+setIsMatch :: RureSetPtr
+           -> BS.ByteString -- ^ Unicode
+           -> CSize -- ^ Start
+           -> IO Bool
+setIsMatch rsPtr haystack startϵ =
+    BS.unsafeUseAsCStringLen haystack $ \(p, sz) ->
+        rureSetIsMatch rsPtr (castPtr p) (fromIntegral sz) startϵ
 
 isMatch :: RurePtr
         -> BS.ByteString -- ^ Unicode

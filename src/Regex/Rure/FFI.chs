@@ -190,7 +190,7 @@ rureDefaultFlags = RureFlags ({# const RURE_FLAG_UNICODE #})
 {# fun rure_compile_set as ^ { id `Ptr (Ptr UInt8)'
                              , castPtr `Ptr CSize'
                              , coerce `CSize'
-                             , coerce `UInt32'
+                             , coerce `RureFlags'
                              , `RureOptionsPtr'
                              , `RureErrorPtr'
                              } -> `Ptr RureSet' id
