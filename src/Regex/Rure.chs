@@ -36,7 +36,7 @@ import Foreign.ForeignPtr (castForeignPtr, newForeignPtr, touchForeignPtr)
 import Foreign.ForeignPtr.Unsafe (unsafeForeignPtrToPtr)
 import Foreign.Ptr (castPtr, nullPtr, Ptr)
 import Foreign.Storable (sizeOf)
-import Foreign.Marshal.Alloc (allocaBytes, alloca)
+import Foreign.Marshal.Alloc (allocaBytes)
 import Foreign.Marshal.Array (peekArray, pokeArray)
 import Regex.Rure.FFI
 import System.IO.Unsafe (unsafePerformIO)
