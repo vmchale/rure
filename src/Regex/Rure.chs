@@ -3,11 +3,13 @@ module Regex.Rure ( -- * Higher-level functions
                   , hsIsMatch
                   , hsSetIsMatch
                   , hsFind
+                  , hsSetMatches
                   -- * Stateful, functions in 'IO'
                   , compile
                   , compileSet
                   , isMatch
                   , setIsMatch
+                  , setMatches
                   , find
                   , matches
                   , mkIter
@@ -33,8 +35,9 @@ import Foreign.C.Types (CSize)
 import Foreign.ForeignPtr (castForeignPtr, newForeignPtr, touchForeignPtr)
 import Foreign.ForeignPtr.Unsafe (unsafeForeignPtrToPtr)
 import Foreign.Ptr (castPtr, nullPtr, Ptr)
+import Foreign.Storable (sizeOf)
 import Foreign.Marshal.Alloc (allocaBytes, alloca)
-import Foreign.Marshal.Array (pokeArray)
+import Foreign.Marshal.Array (peekArray, pokeArray)
 import Regex.Rure.FFI
 import System.IO.Unsafe (unsafePerformIO)
 
@@ -47,15 +50,14 @@ mkIter :: RurePtr -> IO RureIterPtr
 mkIter rePtr =
     castForeignPtr <$> (newForeignPtr rureIterFree . castPtr =<< rureIterNew rePtr)
 
--- | Segfaults if given >3 patterns
 compileSet :: RureFlags -> [BS.ByteString] -> IO (Either String RureSetPtr)
 compileSet flags bss = do
     preErr <- rureErrorNew
     err <- castForeignPtr <$> newForeignPtr rureErrorFree (castPtr preErr)
     preOpt <- rureOptionsNew
     opt <- castForeignPtr <$> newForeignPtr rureOptionsFree (castPtr preOpt)
-    alloca $ \bPtrs ->
-        alloca $ \szs -> do
+    allocaBytes lBytes $ \bPtrs ->
+        allocaBytes lBytes $ \szs -> do
             pokeArray bPtrs (fmap unsafeForeignPtrToPtr ps)
             pokeArray szs (fromIntegral <$> ss)
             res <- rureCompileSet (castPtr bPtrs) szs (fromIntegral l) flags opt err
@@ -64,6 +66,7 @@ compileSet flags bss = do
                 then Left <$> rureErrorMessage err
                 else Right . castForeignPtr <$> newForeignPtr rureSetFree (castPtr res)
     where l = length bss
+          lBytes = l * sizeOf (undefined :: Ptr a)
           rip (BS.BS psϵ lϵ) = (psϵ, lϵ)
           (ps, ss) = unzip (fmap rip bss)
 
@@ -139,6 +142,17 @@ find rePtr haystack start' =
             then Just <$> rureMatchFromPtr matchPtr
             else pure Nothing
 
+{-# NOINLINE hsSetMatches #-}
+hsSetMatches :: RureFlags
+             -> [BS.ByteString]
+             -> BS.ByteString
+             -> Either String [Bool]
+hsSetMatches flags res haystack = unsafePerformIO $ do
+    resPtr <- compileSet flags res
+    case resPtr of
+        Left err -> pure (Left err)
+        Right rsp -> Right <$> setMatches rsp haystack 0
+
 {-# NOINLINE hsSetIsMatch #-}
 hsSetIsMatch :: RureFlags
              -> [BS.ByteString] -- ^ Needles (regex)
@@ -168,6 +182,19 @@ setIsMatch :: RureSetPtr
 setIsMatch rsPtr haystack startϵ =
     BS.unsafeUseAsCStringLen haystack $ \(p, sz) ->
         rureSetIsMatch rsPtr (castPtr p) (fromIntegral sz) startϵ
+
+setMatches :: RureSetPtr
+           -> BS.ByteString
+           -> CSize
+           -> IO [Bool]
+setMatches rsPtr haystack startϵ =
+    BS.unsafeUseAsCStringLen haystack $ \(p, sz) -> do
+        l <- fromIntegral <$> rureSetLen rsPtr
+        allocaBytes l $ \boolPtr -> do
+            rureSetMatches rsPtr (castPtr p) (fromIntegral sz) startϵ boolPtr
+            fmap cBoolToBool <$> peekArray l boolPtr
+    where cBoolToBool 0 = False
+          cBoolToBool _ = True
 
 isMatch :: RurePtr
         -> BS.ByteString -- ^ Unicode

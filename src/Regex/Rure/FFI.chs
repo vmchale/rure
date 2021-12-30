@@ -70,7 +70,7 @@ import Data.Bits (Bits, (.|.), shift)
 import Data.Coerce (coerce)
 import Data.Int (Int32)
 import Foreign.C.String (CString)
-import Foreign.C.Types (CSize)
+import Foreign.C.Types (CBool, CSize)
 import Foreign.Ptr (Ptr, castPtr)
 
 -- TODO: not this
@@ -205,7 +205,7 @@ rureDefaultFlags = RureFlags ({# const RURE_FLAG_UNICODE #})
                              , `Ptr UInt8'
                              , coerce `CSize'
                              , coerce `CSize'
-                             , castPtr `Ptr Bool' -- TODO: is this right?
+                             , castPtr `Ptr CBool'
                              } -> `Bool'
   #}
 {# fun rure_set_len as ^ { `RureSetPtr' } -> `CSize' coerce #}
