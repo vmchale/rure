@@ -15,6 +15,10 @@ module Regex.Rure ( -- * Higher-level functions
                   , mkIter
                   -- * Types
                   , RureMatch (..)
+                  -- ** Pointer types (stateful, 'IO'-based API)
+                  , RurePtr
+                  , RureIterPtr
+                  , RureSetPtr
                   -- * Options/flags
                   , RureFlags
                   , rureFlagCaseI
@@ -71,12 +75,12 @@ compileSet flags bss = do
           (ps, ss) = unzip (fmap rip bss)
 
 compile :: RureFlags -> BS.ByteString -> IO (Either String RurePtr)
-compile flags bs = do
+compile flags re = do
     preErr <- rureErrorNew
     err <- castForeignPtr <$> newForeignPtr rureErrorFree (castPtr preErr)
     preOpt <- rureOptionsNew
     opt <- castForeignPtr <$> newForeignPtr rureOptionsFree (castPtr preOpt)
-    BS.unsafeUseAsCStringLen bs $ \(p, sz) -> do
+    BS.unsafeUseAsCStringLen re $ \(p, sz) -> do
         res <- rureCompile (castPtr p) (fromIntegral sz) flags opt err
         if res == nullPtr
             then Left <$> rureErrorMessage err
