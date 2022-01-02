@@ -45,9 +45,6 @@ import Foreign.Marshal.Array (peekArray, pokeArray)
 import Regex.Rure.FFI
 import System.IO.Unsafe (unsafePerformIO)
 
--- TODO: not this
-#undef __arm64__
-#define __arm__
 #include <rure.h>
 
 mkIter :: RurePtr -> IO RureIterPtr

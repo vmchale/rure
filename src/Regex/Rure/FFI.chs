@@ -69,13 +69,11 @@ module Regex.Rure.FFI ( -- * Types
 import Data.Bits (Bits, (.|.), shift)
 import Data.Coerce (coerce)
 import Data.Int (Int32)
+import Data.Semigroup (Semigroup (..))
 import Foreign.C.String (CString)
 import Foreign.C.Types (CBool, CSize)
 import Foreign.Ptr (Ptr, castPtr)
 
--- TODO: not this
-#undef __arm64__
-#define __arm__
 #include <rure.h>
 
 type UInt8 = {# type uint8_t #}
