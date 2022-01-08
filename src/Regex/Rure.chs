@@ -4,7 +4,7 @@ module Regex.Rure ( -- * Higher-level functions
                   , hsSetIsMatch
                   , hsFind
                   , hsSetMatches
-                  -- * Stateful, functions in 'IO'
+                  -- * Functions in 'IO'.
                   , compile
                   , compileSet
                   , isMatch
@@ -15,7 +15,7 @@ module Regex.Rure ( -- * Higher-level functions
                   , mkIter
                   -- * Types
                   , RureMatch (..)
-                  -- ** Pointer types (stateful, 'IO'-based API)
+                  -- ** Pointer types
                   , RurePtr
                   , RureIterPtr
                   , RureSetPtr
