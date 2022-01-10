@@ -1,5 +1,3 @@
-{-# LANGUAGE DeriveGeneric #-}
-
 -- | See @rure.h@ for documentation + how to use.
 module Regex.Rure.FFI ( -- * Types
                       -- ** Abstract types
@@ -68,12 +66,10 @@ module Regex.Rure.FFI ( -- * Types
                       , rureCstringFree
                       ) where
 
-import Control.DeepSeq (NFData)
 import Data.Bits (Bits, (.|.), shift)
 import Data.Coerce (coerce)
 import Data.Int (Int32)
 import Data.Semigroup (Semigroup (..))
-import GHC.Generics (Generic)
 import Foreign.C.String (CString)
 import Foreign.C.Types (CBool, CSize)
 import Foreign.Ptr (Ptr, castPtr)
@@ -97,9 +93,7 @@ data Rure
 
 data RureOptions
 
-data RureMatch = RureMatch { start :: !CSize, end :: !CSize } deriving (Eq, Show, Generic)
-
-instance NFData RureMatch where
+data RureMatch = RureMatch { start :: !CSize, end :: !CSize } deriving (Eq, Show)
 
 data RureError
 
