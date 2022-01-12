@@ -1,8 +1,8 @@
 cabal-version:      1.18
 name:               regex-rure
-version:            0.1.0.1
-license:            GPL-3
-license-file:       LICENSE
+version:            0.1.0.2
+license:            AGPL-3
+license-file:       COPYING
 maintainer:         vamchale@gmail.com
 author:             Vanessa McHale
 synopsis:           Bindings to Rust's regex library
