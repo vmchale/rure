@@ -43,6 +43,9 @@ library
     if !flag(cross)
         build-tool-depends: c2hs:c2hs >=0.26.1
 
+    if !flag(cross)
+        build-tool-depends: c2hs:c2hs >=0.26.1
+
     if impl(ghc >=8.0)
         ghc-options:
             -Wincomplete-uni-patterns -Wincomplete-record-updates
