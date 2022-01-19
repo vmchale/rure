@@ -1,3 +1,7 @@
+# 0.1.0.3
+
+  * Use `unsafe` for FFI
+
 # 0.1.0.2
 
   * Add `cross` flag to ease cross-compilation
