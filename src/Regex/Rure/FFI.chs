@@ -134,60 +134,60 @@ rureDefaultFlags = RureFlags ({# const RURE_FLAG_UNICODE #})
 {# pointer *rure_captures as RureCapturesPtr foreign finalizer rure_captures_free as ^ -> RureCaptures #}
 {# pointer *rure_set as RureSetPtr foreign finalizer rure_set_free as ^ -> RureSet #}
 
-{# fun rure_compile_must as ^ { `CString' } -> `Ptr Rure' id #}
-{# fun rure_compile as ^ { `Ptr UInt8'
+{# fun unsafe rure_compile_must as ^ { `CString' } -> `Ptr Rure' id #}
+{# fun unsafe rure_compile as ^ { `Ptr UInt8'
                          , coerce `CSize'
                          , coerce `RureFlags'
                          , `RureOptionsPtr'
                          , `RureErrorPtr'
                          } -> `Ptr Rure' id
   #}
-{# fun rure_is_match as ^ { `RurePtr', `Ptr UInt8', coerce `CSize', coerce `CSize' } -> `Bool' #}
-{# fun rure_find as ^ { `RurePtr'
+{# fun unsafe rure_is_match as ^ { `RurePtr', `Ptr UInt8', coerce `CSize', coerce `CSize' } -> `Bool' #}
+{# fun unsafe rure_find as ^ { `RurePtr'
                       , `Ptr UInt8'
                       , coerce `CSize'
                       , coerce `CSize'
                       , castPtr `Ptr RureMatch'
                       } -> `Bool'
   #}
-{# fun rure_find_captures as ^ { `RurePtr'
+{# fun unsafe rure_find_captures as ^ { `RurePtr'
                                , `Ptr UInt8'
                                , coerce `CSize'
                                , coerce `CSize'
                                , `RureCapturesPtr'
                                } -> `Bool'
   #}
-{# fun rure_shortest_match as ^ { `RurePtr'
+{# fun unsafe rure_shortest_match as ^ { `RurePtr'
                                 , `Ptr UInt8'
                                 , coerce `CSize'
                                 , coerce `CSize'
                                 , castPtr `Ptr CSize'
                                 } -> `Bool'
   #}
-{# fun rure_capture_name_index as ^ { `RurePtr'
+{# fun unsafe rure_capture_name_index as ^ { `RurePtr'
                                     , `CString'
                                     } -> `Int32'
   #}
-{# fun rure_iter_new as ^ { `RurePtr' } -> `Ptr RureIter' id #}
-{# fun rure_iter_next as ^ { `RureIterPtr'
+{# fun unsafe rure_iter_new as ^ { `RurePtr' } -> `Ptr RureIter' id #}
+{# fun unsafe rure_iter_next as ^ { `RureIterPtr'
                            , `Ptr UInt8'
                            , coerce `CSize'
                            , castPtr `Ptr RureMatch'
                            } -> `Bool'
   #}
-{# fun rure_iter_next_captures as ^ { `RureIterPtr'
+{# fun unsafe rure_iter_next_captures as ^ { `RureIterPtr'
                                     , `Ptr UInt8'
                                     , coerce `CSize'
                                     , `RureCapturesPtr'
                                     } -> `Bool'
   #}
-{# fun rure_captures_new as ^ { `RurePtr' } -> `Ptr RureCaptures' id #}
-{# fun rure_captures_at as ^ { `RureCapturesPtr', coerce `CSize', castPtr `Ptr RureMatch' } -> `Bool' #}
-{# fun rure_captures_len as ^ { `RureCapturesPtr' } -> `CSize' coerce #}
-{# fun rure_options_new as ^ { } -> `Ptr RureOptions' id #}
-{# fun rure_options_size_limit as ^ { `RureOptionsPtr', coerce `CSize' } -> `()' #}
-{# fun rure_options_dfa_size_limit as ^ { `RureOptionsPtr', coerce `CSize' } -> `()' #}
-{# fun rure_compile_set as ^ { id `Ptr (Ptr UInt8)'
+{# fun unsafe rure_captures_new as ^ { `RurePtr' } -> `Ptr RureCaptures' id #}
+{# fun unsafe rure_captures_at as ^ { `RureCapturesPtr', coerce `CSize', castPtr `Ptr RureMatch' } -> `Bool' #}
+{# fun unsafe rure_captures_len as ^ { `RureCapturesPtr' } -> `CSize' coerce #}
+{# fun unsafe rure_options_new as ^ { } -> `Ptr RureOptions' id #}
+{# fun unsafe rure_options_size_limit as ^ { `RureOptionsPtr', coerce `CSize' } -> `()' #}
+{# fun unsafe rure_options_dfa_size_limit as ^ { `RureOptionsPtr', coerce `CSize' } -> `()' #}
+{# fun unsafe rure_compile_set as ^ { id `Ptr (Ptr UInt8)'
                              , castPtr `Ptr CSize'
                              , coerce `CSize'
                              , coerce `RureFlags'
@@ -195,21 +195,21 @@ rureDefaultFlags = RureFlags ({# const RURE_FLAG_UNICODE #})
                              , `RureErrorPtr'
                              } -> `Ptr RureSet' id
   #}
-{# fun rure_set_is_match as ^ { `RureSetPtr'
+{# fun unsafe rure_set_is_match as ^ { `RureSetPtr'
                               , `Ptr UInt8'
                               , coerce `CSize'
                               , coerce `CSize'
                               } -> `Bool'
   #}
-{# fun rure_set_matches as ^ { `RureSetPtr'
+{# fun unsafe rure_set_matches as ^ { `RureSetPtr'
                              , `Ptr UInt8'
                              , coerce `CSize'
                              , coerce `CSize'
                              , castPtr `Ptr CBool'
                              } -> `Bool'
   #}
-{# fun rure_set_len as ^ { `RureSetPtr' } -> `CSize' coerce #}
-{# fun rure_error_new as ^ { } -> `Ptr RureError' id #}
-{# fun rure_error_message as ^ { `RureErrorPtr' } -> `String' #}
-{# fun rure_escape_must as ^ { `CString' } -> `CString' #}
-{# fun rure_cstring_free as ^ { `CString' } -> `()' #}
+{# fun unsafe rure_set_len as ^ { `RureSetPtr' } -> `CSize' coerce #}
+{# fun unsafe rure_error_new as ^ { } -> `Ptr RureError' id #}
+{# fun unsafe rure_error_message as ^ { `RureErrorPtr' } -> `String' #}
+{# fun unsafe rure_escape_must as ^ { `CString' } -> `CString' #}
+{# fun unsafe rure_cstring_free as ^ { `CString' } -> `()' #}
