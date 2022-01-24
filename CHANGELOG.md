@@ -1,3 +1,7 @@
+# 0.1.2.0
+
+  * Add some higher-level functions for dealing with captures
+
 # 0.1.1.0
 
   * Add missing low-level functions
