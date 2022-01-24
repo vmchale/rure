@@ -13,6 +13,7 @@ module Regex.Rure ( -- * Higher-level functions
                   , find
                   , matches
                   , mkIter
+                  , findCaptures
                   -- * Types
                   , RureMatch (..)
                   -- ** Pointer types
@@ -36,7 +37,7 @@ import qualified Data.ByteString.Internal as BS
 import qualified Data.ByteString.Unsafe as BS
 import Data.Foldable (traverse_)
 import Foreign.C.Types (CSize)
-import Foreign.ForeignPtr (castForeignPtr, newForeignPtr, touchForeignPtr)
+import Foreign.ForeignPtr (castForeignPtr, mallocForeignPtr, newForeignPtr, touchForeignPtr)
 import Foreign.ForeignPtr.Unsafe (unsafeForeignPtrToPtr)
 import Foreign.Ptr (castPtr, nullPtr, Ptr)
 import Foreign.Storable (sizeOf)
@@ -46,6 +47,14 @@ import Regex.Rure.FFI
 import System.IO.Unsafe (unsafePerformIO)
 
 #include <rure.h>
+
+capturesAt :: RureCapturesPtr -> CSize -> IO (Maybe RureMatch)
+capturesAt rcp sz =
+    allocaBytes {# sizeof rure_match #} $ \matchPtr -> do
+    res <- rureCapturesAt rcp sz matchPtr
+    if res
+        then Just <$> rureMatchFromPtr matchPtr
+        else pure Nothing
 
 mkIter :: RurePtr -> IO RureIterPtr
 mkIter rePtr =
@@ -130,6 +139,20 @@ hsFind flags re haystack = unsafePerformIO $ do
     case rePtr of
         Left err -> pure (Left err)
         Right rp -> Right <$> find rp haystack 0
+
+findCaptures :: RurePtr
+             -> BS.ByteString
+             -> CSize -- ^ Index (captures)
+             -> CSize
+             -> IO (Maybe RureMatch)
+findCaptures rp haystack ix start' = do
+    capPtr <- rureCapturesNew rp
+    capFp <- castForeignPtr <$> newForeignPtr rureCapturesFree (castPtr capPtr)
+    res <- BS.unsafeUseAsCStringLen haystack $ \(p, sz) ->
+        rureFindCaptures rp (castPtr p) (fromIntegral sz) start' capFp
+    if res
+        then capturesAt capFp ix
+        else pure Nothing
 
 find :: RurePtr
      -> BS.ByteString -- ^ Unicode
