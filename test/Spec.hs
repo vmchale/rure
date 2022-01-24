@@ -3,6 +3,7 @@
 module Main (main) where
 
 import qualified Data.ByteString  as BS
+import           Foreign.C.Types  (CSize)
 import           Regex.Rure
 import           Test.Tasty
 import           Test.Tasty.HUnit
@@ -23,7 +24,22 @@ main = defaultMain $
                 , RureMatch 11 21
                 , RureMatch 22 32
                 ]
+        , testCase "captures year" $
+            captures "(\\d{4})-(\\d{2})-(\\d{2})" "2021-03-14" 1 (RureMatch 0 4)
+        , testCase "captures month" $
+            captures "(\\d{4})-(\\d{2})-(\\d{2})" "2021-03-14" 2 (RureMatch 5 7)
         ]
+
+captures :: BS.ByteString
+         -> BS.ByteString -- ^ Haystack
+         -> CSize -- ^ Index
+         -> RureMatch
+         -> Assertion
+captures re haystack ix expected = do
+    (Right rp) <- compile rureDefaultFlags re
+    actual <- findCaptures rp haystack ix 0
+    actual @?= Just expected
+
 
 matchesAt :: BS.ByteString
           -> BS.ByteString
