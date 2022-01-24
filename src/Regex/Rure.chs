@@ -12,8 +12,10 @@ module Regex.Rure ( -- * Higher-level functions
                   , setMatches
                   , find
                   , matches
+                  , matches'
                   , mkIter
                   , findCaptures
+                  , captures
                   -- * Types
                   , RureMatch (..)
                   -- ** Pointer types
@@ -37,7 +39,7 @@ import qualified Data.ByteString.Internal as BS
 import qualified Data.ByteString.Unsafe as BS
 import Data.Foldable (traverse_)
 import Foreign.C.Types (CSize)
-import Foreign.ForeignPtr (castForeignPtr, mallocForeignPtr, newForeignPtr, touchForeignPtr)
+import Foreign.ForeignPtr (castForeignPtr, newForeignPtr, touchForeignPtr)
 import Foreign.ForeignPtr.Unsafe (unsafeForeignPtrToPtr)
 import Foreign.Ptr (castPtr, nullPtr, Ptr)
 import Foreign.Storable (sizeOf)
@@ -56,6 +58,7 @@ capturesAt rcp sz =
         then Just <$> rureMatchFromPtr matchPtr
         else pure Nothing
 
+{-# DEPRECATED mkIter "This creates a stateful pointer in an otherwise pure API" #-}
 mkIter :: RurePtr -> IO RureIterPtr
 mkIter rePtr =
     castForeignPtr <$> (newForeignPtr rureIterFree . castPtr =<< rureIterNew rePtr)
@@ -103,6 +106,14 @@ hsMatches flags re haystack = unsafePerformIO $ do
         Left err -> pure (Left err)
         Right rp -> Right <$> ((\riPtr -> matches riPtr haystack) =<< mkIter rp)
 
+matches' :: RurePtr
+         -> BS.ByteString
+         -> IO [RureMatch]
+matches' rp haystack = do
+    ri <- mkIter rp
+    matches ri haystack
+
+{-# DEPRECATED matches "Use matches', which is not stateful" #-}
 matches :: RureIterPtr
         -> BS.ByteString
         -> IO [RureMatch]
@@ -140,14 +151,50 @@ hsFind flags re haystack = unsafePerformIO $ do
         Left err -> pure (Left err)
         Right rp -> Right <$> find rp haystack 0
 
+allocCapPtr :: RurePtr -> IO RureCapturesPtr
+allocCapPtr rp = do
+    capPtr <- rureCapturesNew rp
+    castForeignPtr <$> newForeignPtr rureCapturesFree (castPtr capPtr)
+
+captures :: RurePtr
+         -> BS.ByteString
+         -> CSize -- ^ Index (for captures)
+         -> IO [RureMatch]
+captures re haystack ix = do
+    capPtr <- allocCapPtr re
+    reIPtr <- mkIter re
+    capturesLoop capPtr reIPtr haystack ix
+
+capturesLoop :: RureCapturesPtr -- ^ For results
+             -> RureIterPtr
+             -> BS.ByteString
+             -> CSize -- ^ Index (captures)
+             -> IO [RureMatch]
+capturesLoop capPtr reIPtr haystack ix = do
+    res <- iterNextCaptures capPtr reIPtr haystack ix
+    case res of
+        Nothing -> pure []
+        Just m -> (m :) <$> capturesLoop capPtr reIPtr haystack ix
+
+iterNextCaptures :: RureCapturesPtr -- ^ For results
+                 -> RureIterPtr
+                 -> BS.ByteString
+                 -> CSize -- ^ Index (captures)
+                 -> IO (Maybe RureMatch)
+iterNextCaptures capPtr reIPtr haystack ix = do
+    res <- BS.unsafeUseAsCStringLen haystack $ \(p, sz) ->
+        rureIterNextCaptures reIPtr (castPtr p) (fromIntegral sz) capPtr
+    if res
+        then capturesAt capPtr ix
+        else pure Nothing
+
 findCaptures :: RurePtr
              -> BS.ByteString
              -> CSize -- ^ Index (captures)
-             -> CSize
+             -> CSize -- ^ Start
              -> IO (Maybe RureMatch)
 findCaptures rp haystack ix start' = do
-    capPtr <- rureCapturesNew rp
-    capFp <- castForeignPtr <$> newForeignPtr rureCapturesFree (castPtr capPtr)
+    capFp <- allocCapPtr rp
     res <- BS.unsafeUseAsCStringLen haystack $ \(p, sz) ->
         rureFindCaptures rp (castPtr p) (fromIntegral sz) start' capFp
     if res
