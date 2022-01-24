@@ -7,6 +7,7 @@ module Regex.Rure.FFI ( -- * Types
                       , RureCaptures
                       , RureSet
                       , RureIter
+                      , RureIterCaptureNames
                       -- ** Integer types
                       , UInt8
                       , UInt32
@@ -20,6 +21,7 @@ module Regex.Rure.FFI ( -- * Types
                       , RureIterPtr
                       , RureCapturesPtr
                       , RureSetPtr
+                      , RureIterCaptureNamesPtr
                       -- * Functions
                       -- ** Allocation
                       , rureOptionsNew
@@ -32,6 +34,8 @@ module Regex.Rure.FFI ( -- * Types
                       , rureCapturesNew
                       , rureCapturesFree
                       , rureSetFree
+                      , rureIterCaptureNamesNew
+                      , rureIterCaptureNamesFree
                       -- ** Options
                       , rureOptionsSizeLimit
                       , rureOptionsDfaSizeLimit
@@ -53,6 +57,7 @@ module Regex.Rure.FFI ( -- * Types
                       , rureSetIsMatch
                       , rureSetMatches
                       , rureSetLen
+                      , rureIterCaptureNamesNext
                       -- ** Flags
                       , rureFlagCaseI
                       , rureFlagMulti
@@ -99,6 +104,8 @@ data RureIter
 
 data RureCaptures
 
+data RureIterCaptureNames
+
 data RureSet
 
 (<<) :: Bits a => a -> Int -> a
@@ -131,6 +138,7 @@ rureDefaultFlags = RureFlags ({# const RURE_FLAG_UNICODE #})
 {# pointer *rure_iter as RureIterPtr foreign finalizer rure_iter_free as ^ -> RureIter #}
 {# pointer *rure_captures as RureCapturesPtr foreign finalizer rure_captures_free as ^ -> RureCaptures #}
 {# pointer *rure_set as RureSetPtr foreign finalizer rure_set_free as ^ -> RureSet #}
+{# pointer *rure_iter_capture_names as RureIterCaptureNamesPtr foreign finalizer rure_iter_capture_names_free as ^ -> RureIterCaptureNames #}
 
 {# fun unsafe rure_compile_must as ^ { `CString' } -> `Ptr Rure' id #}
 {# fun unsafe rure_compile as ^ { `Ptr UInt8'
@@ -163,9 +171,11 @@ rureDefaultFlags = RureFlags ({# const RURE_FLAG_UNICODE #})
                                 } -> `Bool'
   #}
 {# fun unsafe rure_capture_name_index as ^ { `RurePtr'
-                                    , `CString'
-                                    } -> `Int32'
+                                           , `CString'
+                                           } -> `Int32'
   #}
+{# fun unsafe rure_iter_capture_names_new as ^ { `RurePtr' } -> `Ptr RureIterCaptureNames' id #}
+{# fun unsafe rure_iter_capture_names_next as ^ { `RureIterCaptureNamesPtr', id `Ptr CString' } -> `Bool' #}
 {# fun unsafe rure_iter_new as ^ { `RurePtr' } -> `Ptr RureIter' id #}
 {# fun unsafe rure_iter_next as ^ { `RureIterPtr'
                            , `Ptr UInt8'
