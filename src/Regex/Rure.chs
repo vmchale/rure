@@ -106,6 +106,7 @@ hsMatches flags re haystack = unsafePerformIO $ do
         Left err -> pure (Left err)
         Right rp -> Right <$> ((\riPtr -> matches riPtr haystack) =<< mkIter rp)
 
+-- | @since 0.1.2.0
 matches' :: RurePtr
          -> BS.ByteString
          -> IO [RureMatch]
@@ -156,6 +157,7 @@ allocCapPtr rp = do
     capPtr <- rureCapturesNew rp
     castForeignPtr <$> newForeignPtr rureCapturesFree (castPtr capPtr)
 
+-- | @since 0.1.2.0
 captures :: RurePtr
          -> BS.ByteString
          -> CSize -- ^ Index (for captures)
@@ -188,6 +190,7 @@ iterNextCaptures capPtr reIPtr haystack ix = do
         then capturesAt capPtr ix
         else pure Nothing
 
+-- | @since 0.1.2.0
 findCaptures :: RurePtr
              -> BS.ByteString
              -> CSize -- ^ Index (captures)
