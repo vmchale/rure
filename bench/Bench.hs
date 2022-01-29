@@ -12,7 +12,7 @@ import qualified Text.Regex.TDFA.ByteString as TDFA
 main :: IO ()
 main =
     defaultMain [ bgroup "rure"
-                      [ bench "matches" $ nf (matches' datePtr) "1986-08-28 1977-09-13"
+                      [ bench "matches" $ nf (matchesϵ datePtr) "1986-08-28 1977-09-13"
                       ]
                 , bgroup "tdfa"
                       [ bench "matches" $ nf (TDFA.execute dateTDFA) "1986-08-28 1977-09-13"
@@ -27,7 +27,5 @@ main =
 compile' :: BS.ByteString -> Either String RurePtr
 compile' re = unsafeDupablePerformIO $ compile rureDefaultFlags re
 
-matches' :: RurePtr -> BS.ByteString -> [RureMatch]
-matches' re str = unsafeDupablePerformIO $ do
-    iter <- mkIter re
-    matches iter str
+matchesϵ :: RurePtr -> BS.ByteString -> [RureMatch]
+matchesϵ re str = unsafeDupablePerformIO $ matches' re str
