@@ -1,1 +1,4 @@
 haddock-internal: true
+
+package regex-tdfa
+  ghc-options: -O2
