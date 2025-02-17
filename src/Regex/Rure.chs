@@ -119,21 +119,18 @@ matches :: RureIterPtr
         -> BS.ByteString
         -> IO [RureMatch]
 matches reIPtr haystack = do
-    res <- iterNext reIPtr haystack
+    res <- next
     case res of
         Nothing -> pure []
         Just m -> (m:) <$> matches reIPtr haystack
-
-iterNext :: RureIterPtr
-         -> BS.ByteString
-         -> IO (Maybe RureMatch)
-iterNext reIPtr haystack =
-    allocaBytes {# sizeof rure_match #} $ \matchPtr -> do
+  where
+    next :: IO (Maybe RureMatch)
+    next = allocaBytes {# sizeof rure_match #} $ \matchPtr -> do
         res <- BS.unsafeUseAsCStringLen haystack $ \(p, sz) ->
             rureIterNext reIPtr (castPtr p) (fromIntegral sz) matchPtr
         if res
             then Just <$> rureMatchFromPtr matchPtr
-            else pure Nothing
+        else pure Nothing
 
 rureMatchFromPtr :: Ptr RureMatch -> IO RureMatch
 rureMatchFromPtr matchPtr =
