@@ -50,13 +50,17 @@ import System.IO.Unsafe (unsafePerformIO)
 
 #include <rure.h>
 
+infixr 9 ?
+infixr 9 ??
+
+x ? b = if b then x else pure Nothing
+x ?? b = (Just<$>x) ? b
+
 capturesAt :: RureCapturesPtr -> CSize -> IO (Maybe RureMatch)
 capturesAt rcp sz =
     allocaBytes {# sizeof rure_match #} $ \matchPtr -> do
     res <- rureCapturesAt rcp sz matchPtr
-    if res
-        then Just <$> rureMatchFromPtr matchPtr
-        else pure Nothing
+    rureMatchFromPtr matchPtr ?? res
 
 {-# DEPRECATED mkIter "This creates a stateful pointer in an otherwise pure API" #-}
 mkIter :: RurePtr -> IO RureIterPtr
@@ -128,9 +132,7 @@ matches reIPtr haystack = do
     next = allocaBytes {# sizeof rure_match #} $ \matchPtr -> do
         res <- BS.unsafeUseAsCStringLen haystack $ \(p, sz) ->
             rureIterNext reIPtr (castPtr p) (fromIntegral sz) matchPtr
-        if res
-            then Just <$> rureMatchFromPtr matchPtr
-        else pure Nothing
+        rureMatchFromPtr matchPtr ?? res
 
 rureMatchFromPtr :: Ptr RureMatch -> IO RureMatch
 rureMatchFromPtr matchPtr =
@@ -178,9 +180,7 @@ captures re haystack n = do
         next ix = do
             res <- BS.unsafeUseAsCStringLen haystack $ \(p, sz) ->
                 rureIterNextCaptures reIPtr (castPtr p) (fromIntegral sz) capPtr
-            if res
-                then capturesAt capPtr ix
-                else pure Nothing
+            capturesAt capPtr ix ? res
 
 -- | @since 0.1.2.0
 findCaptures :: RurePtr
@@ -192,9 +192,7 @@ findCaptures rp haystack ix start' = do
     capFp <- allocCapPtr rp
     res <- BS.unsafeUseAsCStringLen haystack $ \(p, sz) ->
         rureFindCaptures rp (castPtr p) (fromIntegral sz) start' capFp
-    if res
-        then capturesAt capFp ix
-        else pure Nothing
+    capturesAt capFp ix ? res
 
 find :: RurePtr
      -> BS.ByteString -- ^ Unicode
@@ -204,9 +202,7 @@ find rePtr haystack start' =
     allocaBytes {# sizeof rure_match #} $ \matchPtr -> do
         res <- BS.unsafeUseAsCStringLen haystack $ \(p, sz) ->
             rureFind rePtr (castPtr p) (fromIntegral sz) start' matchPtr
-        if res
-            then Just <$> rureMatchFromPtr matchPtr
-            else pure Nothing
+        rureMatchFromPtr matchPtr ?? res
 
 {-# NOINLINE hsSetMatches #-}
 hsSetMatches :: RureFlags
@@ -258,9 +254,9 @@ setMatches rsPtr haystack startϵ =
         l <- fromIntegral <$> rureSetLen rsPtr
         allocaBytes l $ \boolPtr -> do
             rureSetMatches rsPtr (castPtr p) (fromIntegral sz) startϵ boolPtr
-            fmap cBoolToBool <$> peekArray l boolPtr
-    where cBoolToBool 0 = False
-          cBoolToBool _ = True
+            map cB <$> peekArray l boolPtr
+    where cB 0 = False
+          cB _ = True
 
 isMatch :: RurePtr
         -> BS.ByteString -- ^ Unicode
