@@ -122,7 +122,7 @@ matches reIPtr haystack = do
     res <- iterNext reIPtr haystack
     case res of
         Nothing -> pure []
-        Just m -> (m :) <$> matches reIPtr haystack
+        Just m -> (m:) <$> matches reIPtr haystack
 
 iterNext :: RureIterPtr
          -> BS.ByteString
@@ -165,30 +165,25 @@ captures :: RurePtr
 captures re haystack ix = do
     capPtr <- allocCapPtr re
     reIPtr <- mkIter re
-    capturesLoop capPtr reIPtr haystack ix
-
-capturesLoop :: RureCapturesPtr -- ^ For results
-             -> RureIterPtr
-             -> BS.ByteString
-             -> CSize -- ^ Index (captures)
-             -> IO [RureMatch]
-capturesLoop capPtr reIPtr haystack ix = do
-    res <- iterNextCaptures capPtr reIPtr haystack ix
-    case res of
-        Nothing -> pure []
-        Just m -> (m :) <$> capturesLoop capPtr reIPtr haystack ix
-
-iterNextCaptures :: RureCapturesPtr -- ^ For results
-                 -> RureIterPtr
-                 -> BS.ByteString
-                 -> CSize -- ^ Index (captures)
-                 -> IO (Maybe RureMatch)
-iterNextCaptures capPtr reIPtr haystack ix = do
-    res <- BS.unsafeUseAsCStringLen haystack $ \(p, sz) ->
-        rureIterNextCaptures reIPtr (castPtr p) (fromIntegral sz) capPtr
-    if res
-        then capturesAt capPtr ix
-        else pure Nothing
+    loop capPtr reIPtr
+  where
+    loop :: RureCapturesPtr -- ^ For results
+         -> RureIterPtr
+         -> IO [RureMatch]
+    loop capPtr reIPtr = do
+        res <- next ix
+        case res of
+            Nothing -> pure []
+            Just m -> (m:) <$> loop capPtr reIPtr
+      where
+        next :: CSize -- ^ Index (captures)
+             -> IO (Maybe RureMatch)
+        next n = do
+            res <- BS.unsafeUseAsCStringLen haystack $ \(p, sz) ->
+                rureIterNextCaptures reIPtr (castPtr p) (fromIntegral sz) capPtr
+            if res
+                then capturesAt capPtr n
+                else pure Nothing
 
 -- | @since 0.1.2.0
 findCaptures :: RurePtr
