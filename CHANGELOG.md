@@ -1,3 +1,7 @@
+# 1.0.0.0
+
+  * `RureFlags` via c2hs macro-as-enum capability
+
 # 0.1.2.1
 
   * Restyle
