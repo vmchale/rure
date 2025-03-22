@@ -23,13 +23,7 @@ module Regex.Rure ( -- * Higher-level functions
                   , RureIterPtr
                   , RureSetPtr
                   -- * Options/flags
-                  , RureFlags
-                  , rureFlagCaseI
-                  , rureFlagMulti
-                  , rureFlagDotNL
-                  , rureFlagSwapGreed
-                  , rureFlagSpace
-                  , rureFlagUnicode
+                  , RureFlags (..)
                   , rureDefaultFlags
                   ) where
 
@@ -111,9 +105,7 @@ hsMatches flags re haystack = unsafePerformIO $ do
         Right rp -> Right <$> ((\riPtr -> matches riPtr haystack) =<< mkIter rp)
 
 -- | @since 0.1.2.0
-matches' :: RurePtr
-         -> BS.ByteString
-         -> IO [RureMatch]
+matches' :: RurePtr -> BS.ByteString -> IO [RureMatch]
 matches' rp haystack = do
     ri <- mkIter rp
     matches ri haystack
@@ -245,10 +237,7 @@ setIsMatch rsPtr haystack startϵ =
     BS.unsafeUseAsCStringLen haystack $ \(p, sz) ->
         rureSetIsMatch rsPtr (castPtr p) (fromIntegral sz) startϵ
 
-setMatches :: RureSetPtr
-           -> BS.ByteString
-           -> CSize
-           -> IO [Bool]
+setMatches :: RureSetPtr -> BS.ByteString -> CSize -> IO [Bool]
 setMatches rsPtr haystack startϵ =
     BS.unsafeUseAsCStringLen haystack $ \(p, sz) -> do
         l <- fromIntegral <$> rureSetLen rsPtr
