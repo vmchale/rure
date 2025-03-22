@@ -48,7 +48,7 @@ capturess :: BS.ByteString
           -> [RureMatch]
           -> Assertion
 capturess re haystack ix expected = do
-    (Right rp) <- compile rureDefaultFlags re
+    Right rp <- compile rureDefaultFlags re
     actual <- captures rp haystack ix
     actual @?= expected
 
@@ -58,47 +58,33 @@ captures' :: BS.ByteString
           -> RureMatch
           -> Assertion
 captures' re haystack ix expected = do
-    (Right rp) <- compile rureDefaultFlags re
-    actual <- findCaptures rp haystack ix 0
-    actual @?= Just expected
+    Right rp <- compile rureDefaultFlags re
+    Just actual <- findCaptures rp haystack ix 0
+    actual @?= expected
 
-
-matchesAt :: BS.ByteString
-          -> BS.ByteString
-          -> [RureMatch]
-          -> Assertion
+matchesAt :: BS.ByteString -> BS.ByteString -> [RureMatch] -> Assertion
 matchesAt re haystack expected =
     let (Right actual) = hsMatches rureDefaultFlags re haystack
         in actual @?= expected
 
-findAt :: BS.ByteString
-       -> BS.ByteString
-       -> RureMatch
-       -> Assertion
+findAt :: BS.ByteString -> BS.ByteString -> RureMatch -> Assertion
 findAt re haystack expected =
     let (Right actual) = hsFind rureDefaultFlags re haystack
         in actual @?= Just expected
 
-matchesSet :: [BS.ByteString]
-           -> BS.ByteString
-           -> [Bool]
-           -> Assertion
+matchesSet :: [BS.ByteString] -> BS.ByteString -> [Bool] -> Assertion
 matchesSet res haystack expected =
     case hsSetMatches rureDefaultFlags res haystack of
         Left err     -> assertFailure err
         Right actual -> actual @?= expected
 
-matchesY :: [BS.ByteString]
-         -> BS.ByteString
-         -> Assertion
+matchesY :: [BS.ByteString] -> BS.ByteString -> Assertion
 matchesY res haystack =
     case hsSetIsMatch rureDefaultFlags res haystack of
         Left err -> assertFailure err
         Right b  -> assertBool "matches (set)" b
 
-matchY :: BS.ByteString
-       -> BS.ByteString
-       -> Assertion
+matchY :: BS.ByteString -> BS.ByteString -> Assertion
 matchY re haystack =
     case hsIsMatch rureDefaultFlags re haystack of
         Left err -> assertFailure err
