@@ -1,7 +1,3 @@
-# 0.1.2.1
-
-  * Restyle
-
 # 0.1.2.0
 
   * Add some higher-level functions for dealing with captures

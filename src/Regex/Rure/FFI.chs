@@ -13,7 +13,7 @@ module Regex.Rure.FFI ( -- * Types
                       , UInt32
                       -- ** Types
                       , RureMatch (..)
-                      , RureFlags (..)
+                      , RureFlags
                       -- ** Pointer types (c2hs)
                       , RurePtr
                       , RureErrorPtr
@@ -59,13 +59,19 @@ module Regex.Rure.FFI ( -- * Types
                       , rureSetLen
                       , rureIterCaptureNamesNext
                       -- ** Flags
+                      , rureFlagCaseI
+                      , rureFlagMulti
+                      , rureFlagDotNL
+                      , rureFlagSwapGreed
+                      , rureFlagSpace
+                      , rureFlagUnicode
                       , rureDefaultFlags
                       -- ** String utilities
                       , rureEscapeMust
                       , rureCstringFree
                       ) where
 
-import Data.Bits ((.|.))
+import Data.Bits (Bits, (.|.), shift)
 import Data.Coerce (coerce)
 import Data.Int (Int32)
 import Data.Semigroup (Semigroup (..))
@@ -81,24 +87,14 @@ type UInt8 = {# type uint8_t #}
 
 type UInt32 = {# type uint32_t #}
 
+newtype RureFlags = RureFlags UInt32
+
 instance Semigroup RureFlags where
-    (<>) x y = toEnum (fromEnum x .|. fromEnum y)
+    (<>) (RureFlags x) (RureFlags y) = RureFlags (x .|. y)
 
 data Rure
 
 data RureOptions
-
-rureDefaultFlags :: RureFlags
-rureDefaultFlags = RureFlagUnicode
-
-{# enum define RureFlags { RURE_FLAG_CASEI as RureFlagCaseI
-                         , RURE_FLAG_MULTI as RureFlagMulti
-                         , RURE_FLAG_DOTNL as RureFlagDotNL
-                         , RURE_FLAG_SWAP_GREED as RureFlagSwapGreed
-                         , RURE_FLAG_SPACE as RureFlagSpace
-                         , RURE_FLAG_UNICODE as RureFlagUnicode
-                         }
-  #}
 
 data RureMatch = RureMatch { start :: !CSize, end :: !CSize } deriving (Eq, Show)
 
@@ -112,6 +108,30 @@ data RureIterCaptureNames
 
 data RureSet
 
+(<<) :: Bits a => a -> Int -> a
+m << n = m `shift` n
+
+rureFlagCaseI :: RureFlags
+rureFlagCaseI = RureFlags ({# const RURE_FLAG_CASEI #})
+
+rureFlagMulti :: RureFlags
+rureFlagMulti = RureFlags ({# const RURE_FLAG_MULTI #})
+
+rureFlagDotNL :: RureFlags
+rureFlagDotNL = RureFlags ({# const RURE_FLAG_DOTNL #})
+
+rureFlagSwapGreed :: RureFlags
+rureFlagSwapGreed = RureFlags ({# const RURE_FLAG_SWAP_GREED #})
+
+rureFlagSpace :: RureFlags
+rureFlagSpace = RureFlags ({# const RURE_FLAG_SPACE #})
+
+rureFlagUnicode :: RureFlags
+rureFlagUnicode = RureFlags ({# const RURE_FLAG_UNICODE #})
+
+rureDefaultFlags :: RureFlags
+rureDefaultFlags = RureFlags ({# const RURE_FLAG_UNICODE #})
+
 {# pointer *rure as RurePtr foreign finalizer rure_free as ^ -> Rure #}
 {# pointer *rure_options as RureOptionsPtr foreign finalizer rure_options_free as ^ -> RureOptions #}
 {# pointer *rure_error as RureErrorPtr foreign finalizer rure_error_free as ^ -> RureError #}
@@ -123,7 +143,7 @@ data RureSet
 {# fun unsafe rure_compile_must as ^ { `CString' } -> `Ptr Rure' id #}
 {# fun unsafe rure_compile as ^ { `Ptr UInt8'
                          , coerce `CSize'
-                         , `RureFlags'
+                         , coerce `RureFlags'
                          , `RureOptionsPtr'
                          , `RureErrorPtr'
                          } -> `Ptr Rure' id
@@ -178,7 +198,7 @@ data RureSet
 {# fun unsafe rure_compile_set as ^ { id `Ptr (Ptr UInt8)'
                              , castPtr `Ptr CSize'
                              , coerce `CSize'
-                             , `RureFlags'
+                             , coerce `RureFlags'
                              , `RureOptionsPtr'
                              , `RureErrorPtr'
                              } -> `Ptr RureSet' id
